@@ -35,7 +35,7 @@ class User(db.Model):
 
     def generate_auth_token(self):
         pyload = {'username': self.username, 'department': self.department}
-        token = create_access_token(identity=pyload, expires_delta=timedelta(seconds=600))
+        token = create_access_token(identity=pyload, expires_delta=timedelta(seconds=28800))
         return token
 
     def to_json(self):
