@@ -1,0 +1,30 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8502
+ * Running on http://192.168.71.31:8502
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 617-751-057
+192.168.73.27 - - [12/Oct/2024 10:44:36] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:45:21] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:45:23] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:45:24] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:45:25] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:45:30] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:45:53] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:46:01] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:46:51] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:47:23] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:49:22] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 10:50:45] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 11:02:53] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 11:05:16] "[31m[1mGET /api/user/check_token HTTP/1.1[0m" 401 -
+192.168.73.27 - - [12/Oct/2024 11:06:48] "POST /api/user/login HTTP/1.1" 200 -
+192.168.73.27 - - [12/Oct/2024 11:06:50] "GET /api/user/check_token HTTP/1.1" 200 -
+ * Detected change in '/work/users/beitai/backend/Biotech/app/models.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 617-751-057

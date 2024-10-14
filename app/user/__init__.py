@@ -14,9 +14,9 @@ def login():
     password = request.json['password']
     user = User.query.filter_by(username=username).first()
     if not user:
-        return {'msg': f'用户不存在！', 'code': 401}
+        return {'msg': f'用户不存在！', 'code': 412}
     if not check_password_hash(user.password, password):
-        return {'msg': f'密码错误！', 'code': 401}
+        return {'msg': f'密码错误！', 'code': 412}
     return jsonify({'msg': '登录成功！','username':username, 'code': 200, 'token': user.generate_auth_token()})
 
 ##验证token是否有效
@@ -33,7 +33,7 @@ def addUser():
     department = request.json['department']
     user = User.query.filter_by(username=username).first()
     if user:
-        return jsonify({'msg':'用户已存在！', 'code':401})
+        return jsonify({'msg':'用户已存在！', 'code':412})
     else:
         u = User(username=username, password=generate_password_hash(password), department=department)
         db.session.add(u)
@@ -52,4 +52,4 @@ def changePassword():
         db.session.commit()
         return jsonify({'msg':'修改密码成功！', 'code':200})
     else:
-        return jsonify({'msg':'用户不存在！', 'code':401})
+        return jsonify({'msg':'用户不存在！', 'code':412})
