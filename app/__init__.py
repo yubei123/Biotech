@@ -14,6 +14,8 @@ db.init_app(app)
 
 from app.user import user
 from app.menu import menu
+from app.sample import sample
 
 app.register_blueprint(user, url_prefix="/api/user")
 app.register_blueprint(menu, url_prefix="/api/menu")
+app.register_blueprint(sample, url_prefix="/api/sample")
