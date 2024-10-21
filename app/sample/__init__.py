@@ -16,22 +16,23 @@ sample = Blueprint('sample', __name__)
 # }
 
 ### 上传文件api
-@sample.route('/uploadfile', methods=['POST'])
-@jwt_required()
-def uploadsampleinfo():
-    today = datetime.now().strftime('%Y-%m-%d')
-    fileurl = request.files['file']
-    filename = fileurl.filename
-    if not os.path.isdir(f'/work/users/beitai/project/LymScan/sampleinfo/{today}'):
-        os.mkdir(f'/work/users/beitai/project/LymScan/sampleinfo/{today}')
-    savedir = f'/work/users/beitai/project/LymScan/sampleinfo/{today}/' + filename
-    fileurl.save(savedir)
-    res = {}
-    res['msg'] = 'upload success!'
-    res['code'] = 200
-    res['data'].append({'url': savedir})
-    print(res)
-    return jsonify(res)
+# @sample.route('/uploadfile', methods=['POST'])
+# @jwt_required()
+# def uploadfile():
+#     today = datetime.now().strftime('%Y-%m-%d')
+#     fileurl = request.files['file']
+#     filename = fileurl.filename
+#     if not os.path.isdir(f'/work/users/beitai/project/LymScan/sampleinfo/{today}'):
+#         os.mkdir(f'/work/users/beitai/project/LymScan/sampleinfo/{today}')
+#     savedir = f'/work/users/beitai/project/LymScan/sampleinfo/{today}/' + filename
+#     fileurl.save(savedir)
+#     res = {}
+#     res['msg'] = 'upload success!'
+#     res['code'] = 200
+#     res['data'] = []
+#     res['data'].append({'url': savedir})
+#     print(res)
+#     return jsonify(res)
 
 ### 样本信息更新api
 @sample.route('/uploadsampleinfo', methods=['POST'])
@@ -51,13 +52,16 @@ def uploadsampleinfo():
 @sample.route('/getsampleinfo', methods=['POST'])
 @jwt_required()
 def getsampleinfo():
+    # print(1)
     sampleBarcode = request.json['sampleBarcode']
     projectBarcode = request.json['projectBarcode']
     diagnosisPeriod = request.json['diagnosisPeriod']
     re = requests.post(f'https://tempest.kindstar.com.cn/aspid/login', json={"userName": "KSBT001","password": "1!2@3#4$fgh"}).json()
+    # print(re)
     token = re['tokenResponse']['access_token']
     headers = {}
     headers["Authorization"] = f"Bearer {token}"
+    # print(token)
     r = requests.get(f'https://itdevelop.kindstar.com.cn/api/external-common/api/SampleInfo/GetSampleByBacodeAndApplyItemCode?barcode={sampleBarcode}&applyitmeCode={projectBarcode}&affiliatedGroup=9030', headers=headers).json()
     if r['code'] == 'fail':
         return jsonify({'msg':'lis系统获取样本信息失败！', 'code': 204})
@@ -68,7 +72,7 @@ def getsampleinfo():
             'sampleBarcode':sampleBarcode,
             'projectBarcode':projectBarcode,
             'patientName':sampledata['patientName'],
-            'patientID':sampledata['patientID'],
+            'patientID':'-',
             'hospitalName':sampledata['hospitalName'] if sampledata['hospitalName'] else '-',
             'sexName':sampledata['sexName'] if sampledata['sexName'] else '-',
             'patientAge':sampledata['patientAgeDisplay'] if sampledata['patientAgeDisplay'] else '-',
@@ -84,7 +88,7 @@ def getsampleinfo():
             'sampleReceiveTime':sampledata['giveDate'] if sampledata['giveDate'] else '-',
             'diagnosisPeriod':diagnosisPeriod,
             'projectType':'-',
-            'reportTime':'-',
+            'reportTime':None,
             'sampleStatus':'已收样',
         }
         sampleinfo = SampleInfo(**data)
@@ -97,7 +101,7 @@ def getsampleinfo():
 ### 样本信息查询api
 @sample.route('/searchsampleinfo', methods=['POST'])
 @jwt_required()
-def uploadsampleinfo():
+def searchsampleinfo():
     inputStr = request.json['input']
     info = SampleInfo.query.filter(or_(SampleInfo.sampleBarcode == inputStr, SampleInfo.patientName == inputStr, SampleInfo.projectBarcode == inputStr, \
                                        SampleInfo.sampleType == inputStr, SampleInfo.patientID == inputStr, SampleInfo.hospitalName.contains(inputStr))).all()

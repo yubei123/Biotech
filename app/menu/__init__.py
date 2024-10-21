@@ -8,7 +8,7 @@ menu = Blueprint('menu', __name__)
 @menu.route('/menulist', methods=['GET'])
 @jwt_required()
 def menulist():
-    order = ['首页', '实验室处理', '报告分析']
+    order = ['首页', '实验处理', '报告分析', '用户管理']
     resp = {'msg': '', 'code': '', 'data': []}
     mlist = Menu.query.all()
     subname = defaultdict(list)
