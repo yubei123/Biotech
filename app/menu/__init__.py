@@ -15,7 +15,10 @@ def menulist():
     subpath = defaultdict(list)
     for i in mlist:
         ds = i.department.split(',')
-        if g.department in ds or i.department == 'all':
+        if g.department == 'root':
+            subname[i.name].append(i.subname)
+            subpath[i.name].append(i.subpath)
+        elif g.department in ds or i.department == 'all':
             subname[i.name].append(i.subname)
             subpath[i.name].append(i.subpath)
     listsubs = sorted(subname.keys(), key=order.index)

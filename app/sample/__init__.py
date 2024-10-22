@@ -52,27 +52,24 @@ def uploadsampleinfo():
 @sample.route('/getsampleinfo', methods=['POST'])
 @jwt_required()
 def getsampleinfo():
-    # print(1)
-    sampleBarcode = request.json['sampleBarcode']
-    projectBarcode = request.json['projectBarcode']
-    diagnosisPeriod = request.json['diagnosisPeriod']
-    re = requests.post(f'https://tempest.kindstar.com.cn/aspid/login', json={"userName": "KSBT001","password": "1!2@3#4$fgh"}).json()
-    # print(re)
-    token = re['tokenResponse']['access_token']
-    headers = {}
-    headers["Authorization"] = f"Bearer {token}"
-    # print(token)
-    r = requests.get(f'https://itdevelop.kindstar.com.cn/api/external-common/api/SampleInfo/GetSampleByBacodeAndApplyItemCode?barcode={sampleBarcode}&applyitmeCode={projectBarcode}&affiliatedGroup=9030', headers=headers).json()
-    if r['code'] == 'fail':
-        return jsonify({'msg':'lis系统获取样本信息失败！', 'code': 204})
-    sampledata = r['data']
-    info = SampleInfo.query.filter_by(sampleBarcode=sampleBarcode).first()
-    if not info:
+    for i in request.json['data']:
+        sampleBarcode = i['sampleBarcode']
+        projectBarcode = i['projectBarcode']
+        patientID = i['patientID']
+        diagnosisPeriod = i['diagnosisPeriod']
+        re = requests.post(f'https://tempest.kindstar.com.cn/aspid/login', json={"userName": "KSBT001","password": "1!2@3#4$fgh"}).json()
+        token = re['tokenResponse']['access_token']
+        headers = {}
+        headers["Authorization"] = f"Bearer {token}"
+        r = requests.get(f'https://itdevelop.kindstar.com.cn/api/external-common/api/SampleInfo/GetSampleByBacodeAndApplyItemCode?barcode={sampleBarcode}&applyitmeCode={projectBarcode}&affiliatedGroup=9030', headers=headers).json()
+        if r['code'] == 'fail':
+            return jsonify({'msg':'lis系统获取样本信息失败！', 'code': 204})
+        sampledata = r['data']
         data = {
             'sampleBarcode':sampleBarcode,
             'projectBarcode':projectBarcode,
             'patientName':sampledata['patientName'],
-            'patientID':'-',
+            'patientID':patientID,
             'hospitalName':sampledata['hospitalName'] if sampledata['hospitalName'] else '-',
             'sexName':sampledata['sexName'] if sampledata['sexName'] else '-',
             'patientAge':sampledata['patientAgeDisplay'] if sampledata['patientAgeDisplay'] else '-',
@@ -85,18 +82,25 @@ def getsampleinfo():
             'doctorName':sampledata['doctorName'] if sampledata['doctorName'] else '-',
             'clinicalDiagnosis':sampledata['clinicalDiagnosis'] if sampledata['clinicalDiagnosis'] else '-',
             'sampleCollectionTime':sampledata['sampleCollectionTime'] if sampledata['sampleCollectionTime'] else '-',
-            'sampleReceiveTime':sampledata['giveDate'] if sampledata['giveDate'] else '-',
+            'sampleReceiveTime':sampledata['CreateDate'] if sampledata['CreateDate'] else '-',
             'diagnosisPeriod':diagnosisPeriod,
-            'projectType':'-',
+            'projectType':sampledata['applyItemName'] if sampledata['applyItemName'] else '-',
             'reportTime':None,
             'sampleStatus':'已收样',
-        }
-        sampleinfo = SampleInfo(**data)
-        db.session.add(sampleinfo)
-        db.session.commit()
-        return jsonify({'msg': 'success', 'code': 200})
-    else:
-        return jsonify({'msg': '样本已存在！', 'code': 204})
+            }
+        info = SampleInfo.query.filter_by(sampleBarcode=sampleBarcode).first()
+        if not info:
+            sampleinfo = SampleInfo(**data)
+            db.session.add(sampleinfo)
+            db.session.commit()
+        else:
+            data['patientID'] = info.patientID
+            data['projectType'] = info.projectType
+            data['reportTime'] = info.reportTime
+            data['sampleStatus'] = info.sampleStatus
+            info.update(**data)
+            db.session.commit()
+    return jsonify({'msg': 'success', 'code': 200})
 
 ### 样本信息查询api
 @sample.route('/searchsampleinfo', methods=['POST'])
