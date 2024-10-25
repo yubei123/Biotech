@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required
 from datetime import datetime
 from sqlalchemy import between, and_, or_
 import os, requests
+from app.utils import changeUTCtoLocal, addOneday
 
 sample = Blueprint('sample', __name__)
 
@@ -34,11 +35,13 @@ sample = Blueprint('sample', __name__)
 #     print(res)
 #     return jsonify(res)
 
-### 样本信息更新api
+### 样本信息上传及更新api
 @sample.route('/uploadsampleinfo', methods=['POST'])
 @jwt_required()
 def uploadsampleinfo():
     data = request.json['data']
+    print(data)
+    # try:
     for i in data:
         info = SampleInfo.query.filter_by(sampleBarcode=i['sampleBarcode']).first()
         if info:
@@ -47,6 +50,9 @@ def uploadsampleinfo():
             sample = SampleInfo(**i)
             db.session.add(sample)
     db.session.commit()
+    # except Exception as e:
+    #     db.session.rollback()
+    #     return jsonify({'msg':'fail!', 'code':500})
     return jsonify({'msg':'success!', 'code':200})
 
 ### lis系统获取样本信息api
@@ -96,53 +102,68 @@ def getsampleinfo():
         if not info:
             sampleinfo = SampleInfo(**data)
             db.session.add(sampleinfo)
-            db.session.commit()
         else:
             dup_barcode.append(info.sampleBarcode)
-    return jsonify({'msg': dup_barcode, 'code': 200})
+    db.session.commit()
+    if dup_barcode != []:
+        return jsonify({'msg': f'以下样本条码重复，请检查：{dup_barcode}', 'code': 222})
+    return jsonify({'msg': 'success', 'code': 200})
 
 ### 样本信息查询api
 @sample.route('/searchsampleinfo', methods=['POST'])
 @jwt_required()
 def searchsampleinfo():
-    data = request.json['data']
-    if data['sampleBarcode']:
-        query = SampleInfo.query.filter(SampleInfo.sampleBarcode == data['sampleBarcode'])
-    if data['projectBarcode']:
+    data = request.get_json()
+    n = 0
+    query = SampleInfo.query
+    if data['sampleBarcode'] != '':
+        query = query.filter(SampleInfo.sampleBarcode == data['sampleBarcode'])
+        n += 1
+    if data['projectBarcode'] != '':
         query = query.filter(SampleInfo.projectBarcode == data['projectBarcode'])
-    if data['projectName']:
+        n += 1
+    if data['projectName'] != '':
         query = query.filter(SampleInfo.projectName.contains(data['projectName']))
-    if data['patientName']:
+        n += 1
+    if data['patientName'] != '':
         query = query.filter(SampleInfo.patientName.contains(data['patientName']))
-    if data['patientID']:
+        n += 1
+    if data['patientID'] != '':
         query = query.filter(SampleInfo.patientID == data['patientID'])
-    if data['hospitalName']:
+        n += 1
+    if data['hospitalName'] != '':
         query = query.filter(SampleInfo.hospitalName.contains(data['hospitalName']))
-    if data['sampleType']:
+        n += 1
+    if data['sampleType'] != '':
         query = query.filter(SampleInfo.sampleType.contains(data['sampleType']))
-    if data['diagnosisPeriod']:
+        n += 1
+    if data['diagnosisPeriod'] != '':
         query = query.filter(SampleInfo.diagnosisPeriod.contains(data['diagnosisPeriod']))
-    if data['projectType']:
+        n += 1
+    if data['projectType'] != '':
         query = query.filter(SampleInfo.projectType.contains(data['projectType']))
-    if data['sampleStatus']:
+        n += 1
+    if data['sampleStatus'] != '':
         query = query.filter(SampleInfo.sampleStatus.contains(data['sampleStatus']))
-    if data['sampleCollectionTime']:
-        stime = datetime.strptime(f'{data['sampleCollectionTime']} 00:00:00', '%Y-%m-%d %H:%M:%S')
-        etime = datetime.strptime(f'{data["sampleCollectionTime"]} 23:59:59', '%Y-%m-%d %H:%M:%S')
+        n += 1
+    if data['sampleCollectionTime'] != None:
+        stime = changeUTCtoLocal(data["sampleCollectionTime"])
+        etime = addOneday(data["sampleCollectionTime"])
         query = query.filter(between(SampleInfo.sampleCollectionTime, stime, etime))
-    if data['addtime']:
-        stime = datetime.strptime(f'{data["addtime"]} 00:00:00', '%Y-%m-%d %H:%M:%S')
-        etime = datetime.strptime(f'{data["addtime"]} 23:59:59', '%Y-%m-%d %H:%M:%S')
+        n += 1
+    if data['addtime'] != None:
+        stime = changeUTCtoLocal(data["addtime"])
+        etime = addOneday(data["addtime"])
         query = query.filter(between(SampleInfo.addtime, stime, etime))
-    
-    info = query.all()
-    if not info:
+        n += 1
+    info = query.paginate(page=data['pagenum'], per_page=5)
+    if not info or n == 0:
         return jsonify({'msg': 'no data', 'code': 204})
     else:
         res = []
         for i in info:
             res.append(i.to_json())
-        return jsonify({'msg': 'success', 'code': 200, 'data': res})
+        return jsonify({'msg': 'success', 'code': 200, 'data': {'pages': info.pages, 'data':res}})
 
 ### 样本信息删除api
 @sample.route('/deletesampleinfo', methods=['POST'])
@@ -153,9 +174,3 @@ def deletesampleinfo():
     db.session.delete(info)
     db.session.commit()
     return jsonify({'msg': 'success', 'code': 200})
-
-### 样本信息下载api
-@sample.route('/downloadsampleinfo', methods=['POST'])
-@jwt_required()
-def downloadsampleinfo():
-    pass
