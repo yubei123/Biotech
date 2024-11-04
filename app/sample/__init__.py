@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from app.models import User, SampleInfo
+from app.models import User, SampleInfo, delSampleInfo
 from app import db
 from flask_jwt_extended import jwt_required
 from datetime import datetime
@@ -40,15 +40,41 @@ sample = Blueprint('sample', __name__)
 @jwt_required()
 def uploadsampleinfo():
     data = request.json['data']
-    print(data)
+    tag = request.json['tag']
+    # print(data)
     # try:
-    for i in data:
+    dup = []
+    if tag == 'edit':
+        i = data[0]
+        if i['sampleCollectionTime'] != None:
+            i['sampleCollectionTime'] = changeUTCtoLocal(i['sampleCollectionTime'])
+        if i['sampleReceiveTime'] != None:
+            i['sampleReceiveTime'] = changeUTCtoLocal(i['sampleReceiveTime'])
         info = SampleInfo.query.filter_by(sampleBarcode=i['sampleBarcode']).first()
         if info:
             info.update(**i)
         else:
             sample = SampleInfo(**i)
             db.session.add(sample)
+    else:
+        for i in data:
+            info = SampleInfo.query.filter_by(sampleBarcode=i['sampleBarcode']).first()
+            if info:
+                dup.append(i['sampleBarcode'])
+        if dup != []:
+            return jsonify({'msg':f'以下样本条码重复，请检查：{",".join(dup)}', 'code':222})
+        
+        for i in data:
+            if i['sampleCollectionTime'] != None:
+                i['sampleCollectionTime'] = changeUTCtoLocal(i['sampleCollectionTime'])
+            if i['sampleReceiveTime'] != None:
+                i['sampleReceiveTime'] = changeUTCtoLocal(i['sampleReceiveTime'])
+            info = SampleInfo.query.filter_by(sampleBarcode=i['sampleBarcode']).first()
+            if info:
+                dup.append(i['sampleBarcode'])
+            else:
+                sample = SampleInfo(**i)
+                db.session.add(sample)
     db.session.commit()
     # except Exception as e:
     #     db.session.rollback()
@@ -157,7 +183,8 @@ def searchsampleinfo():
         query = query.filter(between(SampleInfo.addtime, stime, etime))
         n += 1
     info = query.paginate(page=data['pagenum'], per_page=5)
-    if not info or n == 0:
+    a = [i.to_json() for i in info]
+    if not a or n == 0:
         return jsonify({'msg': 'no data', 'code': 204})
     else:
         res = []
@@ -171,6 +198,12 @@ def searchsampleinfo():
 def deletesampleinfo():
     sampleBarcode = request.json['sampleBarcode']
     info = SampleInfo.query.filter_by(sampleBarcode=sampleBarcode).first()
+    delinfo = info.to_json()
+    delinfo['delOperator'] = g.username
+    del delinfo['id']
+    del delinfo['addtime']
+    delsample = delSampleInfo(**delinfo)
+    db.session.add(delsample)
     db.session.delete(info)
     db.session.commit()
     return jsonify({'msg': 'success', 'code': 200})
