@@ -178,3 +178,40 @@ class delextractANDpurify(db.Model):
     def update(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+class experimenttohos(db.Model):
+    __tablename__ = 'experimenttohos'
+    id = db.Column(db.Integer, primary_key=True)
+    labDate = db.Column(db.String(8), index=True)
+    sampleBarcode = db.Column(db.String(50), index=True)
+    patientID = db.Column(db.String(20), index=True)
+    diagnosisPeriod = db.Column(db.String(20), index=True)
+    barcodeGroup = db.Column(db.String(10))
+    labSite = db.Column(db.String(10))
+    labUser = db.Column(db.String(20))
+    inputNG = db.Column(db.Integer)
+    qcDate = db.Column(db.String(8), index=True)
+    pcrSite = db.Column(db.String(10), index=True)
+    addtime = db.Column(db.DateTime, index=True, default=datetime.now)
+
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+class qctohos(db.Model):
+    __tablename__ = 'qctohos'
+    id = db.Column(db.Integer, primary_key=True)
+    qcDate = db.Column(db.String(8), index=True)
+    igh = db.Column(db.Integer)
+    igdh = db.Column(db.Integer)
+    igk = db.Column(db.Integer)
+    igl = db.Column(db.Integer)
+    trbvj = db.Column(db.Integer)
+    trbdj = db.Column(db.Integer)
+    trg = db.Column(db.Integer)
+    trd = db.Column(db.Integer)
+    addtime = db.Column(db.DateTime, default=datetime.now)
+
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
