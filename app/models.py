@@ -148,6 +148,9 @@ class delSampleInfo(db.Model):
     def update(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+    
+    def to_json(self):
+        return serialize(self)
 
 class delextractANDpurify(db.Model):
     __tablename__ = 'delextractANDpurify'
@@ -178,6 +181,9 @@ class delextractANDpurify(db.Model):
     def update(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+    
+    def to_json(self):
+        return serialize(self)
 
 class experimenttohos(db.Model):
     __tablename__ = 'experimenttohos'
@@ -189,7 +195,7 @@ class experimenttohos(db.Model):
     barcodeGroup = db.Column(db.String(10))
     labSite = db.Column(db.String(10))
     labUser = db.Column(db.String(20))
-    inputNG = db.Column(db.Integer)
+    inputNG = db.Column(db.String(8))
     qcDate = db.Column(db.String(8), index=True)
     pcrSite = db.Column(db.String(10), index=True)
     addtime = db.Column(db.DateTime, index=True, default=datetime.now)
@@ -198,20 +204,26 @@ class experimenttohos(db.Model):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+    def to_json(self):
+        return serialize(self)
+
 class qctohos(db.Model):
     __tablename__ = 'qctohos'
     id = db.Column(db.Integer, primary_key=True)
     qcDate = db.Column(db.String(8), index=True)
-    igh = db.Column(db.Integer)
-    igdh = db.Column(db.Integer)
-    igk = db.Column(db.Integer)
-    igl = db.Column(db.Integer)
-    trbvj = db.Column(db.Integer)
-    trbdj = db.Column(db.Integer)
-    trg = db.Column(db.Integer)
-    trd = db.Column(db.Integer)
+    igh = db.Column(db.String(8))
+    igdh = db.Column(db.String(8))
+    igk = db.Column(db.String(8))
+    igl = db.Column(db.String(8))
+    trbvj = db.Column(db.String(8))
+    trbdj = db.Column(db.String(8))
+    trg = db.Column(db.String(8))
+    trd = db.Column(db.String(8))
     addtime = db.Column(db.DateTime, default=datetime.now)
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+    
+    def to_json(self):
+        return serialize(self)

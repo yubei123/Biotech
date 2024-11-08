@@ -23,7 +23,10 @@ def menulist():
             subpath[i.name].append(i.subpath)
     listsubs = sorted(subname.keys(), key=order.index)
     for e in listsubs:
-        resp['data'].append({'name': e, 'subname': subname[e], 'subpath': subpath[e]})
+        if e == '实验处理':
+            resp['data'].append({'name': e, 'subname': ['样本录入'], 'subpath': subpath[e]})
+        else:
+            resp['data'].append({'name': e, 'subname': subname[e], 'subpath': subpath[e]})
     resp['msg'] = 'get menulist success!'
     resp['code'] = 200
 

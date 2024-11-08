@@ -140,6 +140,7 @@ def getsampleinfo():
 @jwt_required()
 def searchsampleinfo():
     data = request.get_json()
+    # print(data)
     n = 0
     query = SampleInfo.query
     if data['sampleBarcode'] != '':

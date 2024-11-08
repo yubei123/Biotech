@@ -47,8 +47,8 @@ def searchexperinfo():
     if data['qcDate'] != '':
         query = query.filter(experimenttohos.qcDate == data['qcDate'])
         n += 1
-    if data['pcrSite'] != '':
-        query = query.filter(experimenttohos.pcrSite.contains(data['pcrSite']))
+    if data['labSite'] != '':
+        query = query.filter(experimenttohos.labSite.contains(data['labSite']))
         n += 1
     if data['addtime'] != None:
         stime = changeUTCtoLocal(data["addtime"])
@@ -56,7 +56,8 @@ def searchexperinfo():
         query = query.filter(between(experimenttohos.addtime, stime, etime))
         n += 1
     info = query.paginate(page=data['pagenum'], per_page=5)
-    if not info or n == 0:
+    a = [i.to_json() for i in info]
+    if not a or n == 0:
         return jsonify({'msg': 'no data', 'code': 204})
     else:
         res = []
@@ -93,7 +94,8 @@ def searchqcinfo():
         query = query.filter(qctohos.qcDate == data['qcDate'])
         n += 1
     info = query.paginate(page=data['pagenum'], per_page=5)
-    if not info or n == 0:
+    a = [i.to_json() for i in info]
+    if not a or n == 0:
         return jsonify({'msg': 'no data', 'code': 204})
     else:
         res = []
