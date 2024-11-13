@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from app.models import User, SampleInfo, delSampleInfo
+from app.models import User, SampleInfo, delSampleInfo, addPatientID, experimenttohos
 from app import db
 from flask_jwt_extended import jwt_required
 from datetime import datetime
@@ -193,6 +193,24 @@ def searchsampleinfo():
             res.append(i.to_json())
         return jsonify({'msg': 'success', 'code': 200, 'data': {'pages': info.pages, 'data':res}})
 
+@sample.route('/searchnameorbarcode', methods=['POST'])
+@jwt_required()
+def searchnameorbarcode():
+    data = request.get_json()
+    print(data)
+    if 'sampleBarcode' in data.keys():
+        info = SampleInfo.query.filter(SampleInfo.sampleBarcode == data['sampleBarcode']).all()
+    elif 'patientName' in data.keys():
+        info = SampleInfo.query.filter(SampleInfo.patientName == data['patientName']).all()
+
+    if not info:
+        return jsonify({'msg': 'no data', 'code': 204})
+    else:
+        res = []
+        for i in info:
+            res.append(i.to_json())
+        return jsonify({'msg': 'success', 'code': 200, 'data':res})
+
 ### 样本信息删除api
 @sample.route('/deletesampleinfo', methods=['POST'])
 @jwt_required()
@@ -208,3 +226,42 @@ def deletesampleinfo():
     db.session.delete(info)
     db.session.commit()
     return jsonify({'msg': 'success', 'code': 200})
+
+### 生成样本唯一性ID
+@sample.route('/generatePatientID', methods=['POST'])
+@jwt_required()
+def generatePatientID():
+    data = request.get_json()
+    print(data)
+    currentBarcode = data['currentBarcode']
+    selectBarcode = data['selectBarcode']
+    isDiagnosis = data['isDiagnosis']
+    l_sinfo = SampleInfo.query.filter_by(sampleBarcode=selectBarcode).first()
+    c_sinfo = SampleInfo.query.filter_by(sampleBarcode=currentBarcode).first()
+    if currentBarcode == selectBarcode:
+        IDinfo = addPatientID.query.all()
+        if not IDinfo:
+            PatientIDs = 'lym000001'
+        else:
+            PatientIDs = IDinfo[-1].patientIDs
+            PatientIDs = str(int(PatientIDs[3:]) + 1).zfill(6)
+            PatientIDs = 'lym' + PatientIDs
+        db.session.add(addPatientID(patientIDs=PatientIDs))
+        diagnosisPeriod = 'time_0'
+        PatientID = PatientIDs + '_0'
+    else:
+        if isDiagnosis == '0':     
+            PatientIDs,num = l_sinfo.patientID.split('_')
+            PatientID = f'{PatientIDs}_{int(num) + 1}'
+            diagnosisPeriod = 'time_0'
+        else:
+            PatientID = l_sinfo.patientID
+            pnum = l_sinfo.diagnosisPeriod.split('_')[1]
+            diagnosisPeriod = f'time_{int(pnum) + 1}'
+    c_sinfo.update(patientID=PatientID, diagnosisPeriod=diagnosisPeriod)
+    db.session.add(experimenttohos(sampleBarcode=currentBarcode, patientID=PatientID, diagnosisPeriod=diagnosisPeriod))
+    db.session.commit()
+    c_sinfo = SampleInfo.query.filter_by(sampleBarcode=currentBarcode).first()
+    return jsonify({'msg': 'success', 'code': 200, 'data': [c_sinfo.to_json()]})
+    # return jsonify({'msg': 'success', 'code': 200})
+

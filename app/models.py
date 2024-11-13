@@ -227,3 +227,16 @@ class qctohos(db.Model):
     
     def to_json(self):
         return serialize(self)
+    
+class addPatientID(db.Model):
+    __tablename__ = 'addPatientID'
+    id = db.Column(db.Integer, primary_key=True)
+    patientIDs = db.Column(db.String(20), index=True)
+    addtime = db.Column(db.DateTime, default=datetime.now)
+
+    def update(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+    
+    def to_json(self):
+        return serialize(self)
