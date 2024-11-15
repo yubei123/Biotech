@@ -202,13 +202,15 @@ def searchnameorbarcode():
         info = SampleInfo.query.filter(SampleInfo.sampleBarcode == data['sampleBarcode']).all()
     elif 'patientName' in data.keys():
         info = SampleInfo.query.filter(SampleInfo.patientName == data['patientName']).all()
-
     if not info:
         return jsonify({'msg': 'no data', 'code': 204})
     else:
+        resinfo = {}
         res = []
         for i in info:
-            res.append(i.to_json())
+            resinfo[i.patientID] = i.to_json()
+        for k,v in resinfo.items():
+            res.append(v)
         return jsonify({'msg': 'success', 'code': 200, 'data':res})
 
 ### 样本信息删除api
@@ -263,5 +265,3 @@ def generatePatientID():
     db.session.commit()
     c_sinfo = SampleInfo.query.filter_by(sampleBarcode=currentBarcode).first()
     return jsonify({'msg': 'success', 'code': 200, 'data': [c_sinfo.to_json()]})
-    # return jsonify({'msg': 'success', 'code': 200})
-
