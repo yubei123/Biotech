@@ -140,7 +140,6 @@ def getsampleinfo():
 @jwt_required()
 def searchsampleinfo():
     data = request.get_json()
-    # print(data)
     n = 0
     query = SampleInfo.query
     if data['sampleBarcode'] != '':
@@ -205,12 +204,12 @@ def searchnameorbarcode():
     if not info:
         return jsonify({'msg': 'no data', 'code': 204})
     else:
-        resinfo = {}
+        # resinfo = {}
+        # resinfo[i.patientID] = i.to_json()
+        # for k,v in resinfo.items():
         res = []
         for i in info:
-            resinfo[i.patientID] = i.to_json()
-        for k,v in resinfo.items():
-            res.append(v)
+            res.append(i.to_json())
         return jsonify({'msg': 'success', 'code': 200, 'data':res})
 
 ### 样本信息删除api
@@ -234,12 +233,13 @@ def deletesampleinfo():
 @jwt_required()
 def generatePatientID():
     data = request.get_json()
-    print(data)
     currentBarcode = data['currentBarcode']
     selectBarcode = data['selectBarcode']
     isDiagnosis = data['isDiagnosis']
+    labSite = data['labSite']
     l_sinfo = SampleInfo.query.filter_by(sampleBarcode=selectBarcode).first()
     c_sinfo = SampleInfo.query.filter_by(sampleBarcode=currentBarcode).first()
+    experdata = []
     if currentBarcode == selectBarcode:
         IDinfo = addPatientID.query.all()
         if not IDinfo:
@@ -248,20 +248,48 @@ def generatePatientID():
             PatientIDs = IDinfo[-1].patientIDs
             PatientIDs = str(int(PatientIDs[3:]) + 1).zfill(6)
             PatientIDs = 'lym' + PatientIDs
-        db.session.add(addPatientID(patientIDs=PatientIDs))
-        diagnosisPeriod = 'time_0'
         PatientID = PatientIDs + '_0'
+        if labSite == 'BCR':
+            diagnosisPeriods = 'B_0'
+            experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'B_0'})
+        elif labSite == 'TCR':
+            diagnosisPeriods = 'T_0'
+            experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'T_0'})
+        else:
+            diagnosisPeriods = 'BT_0'
+            experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'B_0'})
+            experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'T_0'})
+        db.session.add(addPatientID(patientIDs=PatientIDs))
     else:
-        if isDiagnosis == '0':     
+        if isDiagnosis == '0':
             PatientIDs,num = l_sinfo.patientID.split('_')
             PatientID = f'{PatientIDs}_{int(num) + 1}'
-            diagnosisPeriod = 'time_0'
+            if labSite == 'BCR':
+                diagnosisPeriods = 'B_0'
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'B_0'})
+            elif labSite == 'TCR':
+                diagnosisPeriods = 'T_0'
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'T_0'})
+            else:
+                diagnosisPeriods = 'BT_0'
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'B_0'})
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': 'T_0'})     
         else:
-            PatientID = l_sinfo.patientID
             pnum = l_sinfo.diagnosisPeriod.split('_')[1]
-            diagnosisPeriod = f'time_{int(pnum) + 1}'
-    c_sinfo.update(patientID=PatientID, diagnosisPeriod=diagnosisPeriod)
-    db.session.add(experimenttohos(sampleBarcode=currentBarcode, patientID=PatientID, diagnosisPeriod=diagnosisPeriod))
+            PatientID = l_sinfo.patientID
+            if labSite == 'BCR':
+                diagnosisPeriods = f'B_{int(pnum) + 1}'
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': f'B_{int(pnum) + 1}'})
+            elif labSite == 'TCR':
+                diagnosisPeriods = f'T_{int(pnum) + 1}'
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': f'T_{int(pnum) + 1}'})
+            else:
+                diagnosisPeriods = f'BT_{int(pnum) + 1}'
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': f'B_{int(pnum) + 1}'})
+                experdata.append({'sampleBarcode': currentBarcode, 'patientID': PatientID, 'diagnosisPeriod': f'T_{int(pnum) + 1}'}) 
+    c_sinfo.update(patientID=PatientID, diagnosisPeriod=diagnosisPeriods)
+    for i in experdata:
+        db.session.add(experimenttohos(**i))
     db.session.commit()
     c_sinfo = SampleInfo.query.filter_by(sampleBarcode=currentBarcode).first()
     return jsonify({'msg': 'success', 'code': 200, 'data': [c_sinfo.to_json()]})
