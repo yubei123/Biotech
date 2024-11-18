@@ -293,3 +293,15 @@ def generatePatientID():
     db.session.commit()
     c_sinfo = SampleInfo.query.filter_by(sampleBarcode=currentBarcode).first()
     return jsonify({'msg': 'success', 'code': 200, 'data': [c_sinfo.to_json()]})
+
+### 退项
+@sample.route('/exitproject', methods=['POST'])
+def exitproject():
+    sampleBarcode = request.get_json()['sampleBarcode']
+    c_sinfo = SampleInfo.query.filter_by(sampleBarcode=sampleBarcode).first()
+    if not c_sinfo:
+        return jsonify({'msg': 'no data', 'code': 204})
+    else:
+        c_sinfo.update(sampleStatus='已退项')
+        db.session.commit()
+    return jsonify({'msg': 'success', 'code': 200, 'data': []})
