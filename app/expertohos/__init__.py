@@ -103,3 +103,17 @@ def searchqcinfo():
             res.append(i.to_json())
         return jsonify({'msg': 'success', 'code': 200, 'data': {'pages': info.pages, 'data':res}})
 
+### 待补充实验信息
+@expertohos.route('/searchaddexperinfo', methods=['GET'])
+@jwt_required()
+def searchaddexperinfo():
+    # data = request.get_json()
+    # experinfo = experimenttohos.query.filter(experimenttohos.labDate == '').paginate(page=data['pagenum'], per_page=5)
+    experinfo = experimenttohos.query.filter(experimenttohos.labDate == None).all()
+    if not experinfo:
+        return jsonify({'msg': 'no data', 'code': 204})
+    else:
+        res = []
+        for i in experinfo:
+            res.append(i.to_json())
+        return jsonify({'msg': 'success', 'code': 200, 'data': res})
